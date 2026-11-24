@@ -1231,19 +1231,46 @@ function startVideo(a){
   f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");
   f.title=a.titulo;
   mount.appendChild(f);
+
+  const applyPtOrEsCaption = (player, forceFallbackPt = false) => {
+    try {
+      if (typeof player.loadModule === "function") {
+        player.loadModule("captions");
+      }
+      if (typeof player.setOption !== "function") return;
+
+      const rawTracks = typeof player.getOption === "function"
+        ? player.getOption("captions", "tracklist")
+        : null;
+      const tracks = Array.isArray(rawTracks) ? rawTracks : [];
+
+      const ptTrack = tracks.find(t => String(t.languageCode || "").toLowerCase().startsWith("pt"));
+      const esTrack = tracks.find(t => String(t.languageCode || "").toLowerCase().startsWith("es"));
+      const targetTrack = ptTrack || esTrack;
+
+      if (targetTrack && targetTrack.languageCode) {
+        player.setOption("captions", "track", { languageCode: targetTrack.languageCode });
+        player.setOption("captions", "reload", true);
+        return true;
+      }
+
+      if (forceFallbackPt) {
+        player.setOption("captions", "track", { languageCode: "pt" });
+        player.setOption("captions", "reload", true);
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  };
+
   loadYT(()=>{
     yt = new YT.Player(f,{ events:{
       onReady:e=>{
         try{
           if(startAt>0) e.target.seekTo(startAt, true);
           e.target.setPlaybackRate(curSpeed);
-          try {
-            if (e.target.loadModule) e.target.loadModule("captions");
-            if (e.target.setOption) {
-              e.target.setOption("captions", "track", { languageCode: "pt" });
-              e.target.setOption("captions", "reload", true);
-            }
-          } catch (_) {}
+          applyPtOrEsCaption(e.target);
           e.target.playVideo();
         }catch(_){}
       },
@@ -1252,10 +1279,11 @@ function startVideo(a){
         stage.classList.toggle("paused", S!==1 && S!==3);
         $("#bplay").innerHTML = ic(S===1?"pause":"play");
         if(S===1){
-          try{
-            if(e.target.loadModule) e.target.loadModule("captions");
-            if(e.target.setOption) e.target.setOption("captions", "track", {languageCode:"pt"});
-          }catch(_){}
+          if (!applyPtOrEsCaption(e.target, true)) {
+            [800, 2000, 4000].forEach(ms => {
+              setTimeout(() => applyPtOrEsCaption(e.target, false), ms);
+            });
+          }
           kick();
         }
         if(S===0){
