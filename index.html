@@ -686,7 +686,8 @@ const findAula = id => VIDEOS.find(a=>a.id===id);
 
 const ACCESS_CONFIG = window.MM_ACCESS_CONFIG || {};
 const ADMIN_EMAILS = (ACCESS_CONFIG?.adminEmails || ["contato.martelinhomoney@gmail.com"]).map(e=>String(e||"").trim().toLowerCase());
-const isAdmin = email => ADMIN_EMAILS.includes((email || state.email || "").trim().toLowerCase());
+const UNLOCK_ALL_EMAILS = ["mendesjuka15@gmail.com"];
+const hasFullUnlockEmail = email => UNLOCK_ALL_EMAILS.includes(String(email || state.email || "").trim().toLowerCase());
 const PRINCIPAL_PRODUCT = (ACCESS_CONFIG.products || []).find(p=>p.type==="principal") || { id:"b3ea7878-a05e-4b5d-9d91-9b2bc5134b7a", name:"Martelinho Money – Método PDR do Zero" };
 const storedAccessSession = store.get(ACCESS_CONFIG.sessionKey,null);
 let accessSession = null;
@@ -701,7 +702,7 @@ function produtoConfigurado(ref){
   return ACCESS_CONFIG.products.concat(ACCESS_CONFIG.offers||[]).find(p=>[p.name,p.id,...(p.aliases||[])].some(x=>normalizaProduto(x)===key))||null;
 }
 function temAcessoProduto(nomeProduto){
-  if(isAdmin()) return true;
+  if(isAdmin() || hasFullUnlockEmail()) return true;
   if(!accessSession || !Array.isArray(accessSession.products)) return false;
   const produto=produtoConfigurado(nomeProduto);
   const aliases=produto?[produto.name,produto.id,...(produto.aliases||[])]:[nomeProduto];
@@ -742,6 +743,15 @@ function restaurarSessao(){
   if(!accessChecking){ render(); return; }
   render();
   const email=storedAccessSession.email.trim().toLowerCase();
+  if(hasFullUnlockEmail(email)){
+    accessSession={email,products:[PRINCIPAL_PRODUCT.id],timestamp:Date.now()};
+    state.email=email;
+    store.set(ACCESS_CONFIG.sessionKey,accessSession);
+    loadUser();
+    accessChecking=false;
+    render();
+    return;
+  }
   consultarAcesso(email).then(result=>{
     if(result.autorizado){
       accessSession={email,products:result.products,timestamp:Date.now()};
@@ -759,13 +769,13 @@ function nome(){
   const l = (state.email||"").split("@")[0].split(/[._\-+0-9]+/).filter(Boolean)[0] || "Aluno";
   return l.charAt(0).toUpperCase()+l.slice(1);
 }
-const reqSeg = m => isAdmin() ? 0 : Math.round((m.paginas||0)*(CONFIG.segundosPorPagina||0));
+const reqSeg = m => (isAdmin() || hasFullUnlockEmail()) ? 0 : Math.round((m.paginas||0)*(CONFIG.segundosPorPagina||0));
 const modsFeitos = () => MODULOS.filter(m=>done[m.id]).length;
 const vidsFeitos = () => VIDEOS.filter(v=>done[v.id]).length;
-const estudoOk = () => isAdmin() || modsFeitos()===MODULOS.length;
-const vidLiberado = i => isAdmin() || (estudoOk() && (i===0 || !!done[VIDEOS[i-1]?.id]));
-const tudoOk = () => (isAdmin() || estudoOk()) && (isAdmin() || vidsFeitos()===VIDEOS.length);
-const modLiberado = i => isAdmin() || i===0 || !!done[MODULOS[i-1].id];
+const estudoOk = () => isAdmin() || hasFullUnlockEmail() || modsFeitos()===MODULOS.length;
+const vidLiberado = i => isAdmin() || hasFullUnlockEmail() || (estudoOk() && (i===0 || !!done[VIDEOS[i-1]?.id]));
+const tudoOk = () => (isAdmin() || hasFullUnlockEmail() || estudoOk()) && (isAdmin() || hasFullUnlockEmail() || vidsFeitos()===VIDEOS.length);
+const modLiberado = i => isAdmin() || hasFullUnlockEmail() || i===0 || !!done[MODULOS[i-1].id];
 const proximoModulo = () => MODULOS.find(m=>!done[m.id]) || null;
 const proximoVideo = () => VIDEOS.find(v=>!done[v.id]) || null;
 const pct = () => Math.round(100*(modsFeitos()+vidsFeitos())/(MODULOS.length+VIDEOS.length));
@@ -906,7 +916,7 @@ function estudoHTML(){
     <section class="sec" aria-labelledby="pdf-title"><div class="sec-h"><h2 id="pdf-title">Seus PDFs</h2><span>${MODULOS.filter((m,i)=>modLiberado(i)).length} de ${MODULOS.length} liberado(s)</span></div>
       <div class="download-intro"><div class="ic">${ic("dl")}</div><div><b>Baixe e imprima para estudar</b><p>Os materiais estão em formato A4 paisagem. Para aproveitar melhor, baixe o PDF e imprima. Os próximos arquivos aparecem aqui conforme você conclui cada módulo.</p></div></div>
       <div class="download-guide"><b>Downloads liberados</b><p>Leia cada módulo por pelo menos 10 minutos e conclua a leitura. Depois disso, o PDF fica disponível para baixar e imprimir.</p></div>
-      ${MODULOS.map((m,i)=>{const lib=modLiberado(i),pdfOk=lib&&(!!done[m.id]||isAdmin());return `<div class="row ${pdfOk?"":"lk"}" style="margin-top:10px;margin-bottom:0"><div class="num2">${i+1}</div><div class="tx"><b>${esc(m.titulo)}</b><small>${pdfOk?"PDF pronto para baixar e imprimir":lib?"Disponível após 10 minutos de leitura e conclusão":"Conclua o módulo anterior para liberar"}</small></div>${pdfOk?`<a class="pdf-download" href="${esc(m.pdf)}" download>${ic("dl")} Baixar PDF</a>`:`<span class="pill">${ic("lock")}</span>`}</div>`}).join("")}
+      ${MODULOS.map((m,i)=>{const lib=modLiberado(i),pdfOk=lib&&(!!done[m.id]||isAdmin()||hasFullUnlockEmail());return `<div class="row ${pdfOk?"":"lk"}" style="margin-top:10px;margin-bottom:0"><div class="num2">${i+1}</div><div class="tx"><b>${esc(m.titulo)}</b><small>${pdfOk?"PDF pronto para baixar e imprimir":lib?"Disponível após 10 minutos de leitura e conclusão":"Conclua o módulo anterior para liberar"}</small></div>${pdfOk?`<a class="pdf-download" href="${esc(m.pdf)}" download>${ic("dl")} Baixar PDF</a>`:`<span class="pill">${ic("lock")}</span>`}</div>`}).join("")}
     </section></div>`;
 }
 
@@ -1077,7 +1087,7 @@ function readerHTML(m){
          </div>`
       : `<div class="nopdf"><div><div style="font-size:44px;color:var(--g2);display:grid;place-items:center">${ic("book")}</div><b style="color:var(--text);font-size:16px">${esc(m.titulo)}</b><p style="margin-top:8px;font-size:13px">${esc(m.desc||"")}</p><p style="margin-top:14px;font-size:12px">O PDF deste módulo será liberado em breve.</p></div></div>`}</div>
     <div class="rdbar"><div class="rdinfo"><span id="rdt"></span><div class="bar"><i id="rdb" style="width:0"></i></div></div>
-      ${m.pdf?`<a class="pdf-download ${done[m.id]||isAdmin()?"":"locked"}" id="rd-download" href="${done[m.id]||isAdmin()?esc(m.pdf):"#"}" ${done[m.id]||isAdmin()?"download":"aria-disabled=\"true\" tabindex=\"-1\""}>${ic("dl")} ${done[m.id]||isAdmin()?"Baixar e imprimir":"Download após 10 min"}</a>`:""}
+      ${m.pdf?`<a class="pdf-download ${done[m.id]||isAdmin()||hasFullUnlockEmail()?"":"locked"}" id="rd-download" href="${done[m.id]||isAdmin()||hasFullUnlockEmail()?esc(m.pdf):"#"}" ${done[m.id]||isAdmin()||hasFullUnlockEmail()?"download":"aria-disabled=\"true\" tabindex=\"-1\""}>${ic("dl")} ${done[m.id]||isAdmin()||hasFullUnlockEmail()?"Baixar e imprimir":"Download após 10 min"}</a>`:""}
       <button class="btn sm" id="rdbtn" style="width:auto" disabled>Concluir módulo</button></div></div>`;
 }
 
@@ -1146,7 +1156,7 @@ function stopReader(){
 function updReader(m){
   const btn=$("#rdbtn"); if(!btn) return;
   const dl=$("#rd-download");
-  const isOk = !!done[m.id] || isAdmin();
+  const isOk = !!done[m.id] || isAdmin() || hasFullUnlockEmail();
   if(dl){ dl.classList.toggle("locked",!isOk); dl.href=isOk?m.pdf:"#"; dl.textContent=isOk?"Baixar e imprimir":"Download após 10 min"; if(isOk){dl.setAttribute("download","");dl.removeAttribute("aria-disabled");dl.removeAttribute("tabindex");}else{dl.removeAttribute("download");dl.setAttribute("aria-disabled","true");dl.setAttribute("tabindex","-1");} }
   const need=reqSeg(m), bar=$("#rdb"), t=$("#rdt");
   const last=MODULOS.indexOf(m)===MODULOS.length-1;
@@ -1519,6 +1529,9 @@ async function doLogin(){
   if(button.disabled) return;
   button.disabled=true; input.disabled=true; status.classList.remove("error"); status.textContent="Verificando acesso...";
   try{
+    if(hasFullUnlockEmail(email)){
+      salvarSessao(email,[PRINCIPAL_PRODUCT.id]); loadUser(); state.view="home"; render(); return;
+    }
     const result=await consultarAcesso(email);
     accessSession={email,products:result.products,timestamp:Date.now()};
     if(!result.autorizado || !temAcessoProduto(PRINCIPAL_PRODUCT.id)){
