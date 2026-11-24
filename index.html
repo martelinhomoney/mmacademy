@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07070a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MM Academy">
 <link rel="manifest" href="manifest.json">
@@ -1457,7 +1458,7 @@ function certModal(){
     const l=waLink("Olá! Concluí o Martelinho Money e quero meu certificado digital. Meu e-mail da compra: "+state.email);
     openModal(`<button class="x" data-act="closem">${ic("x")}</button><h3 class="gold">Parabéns, ${esc(nome())}!</h3>
       <p class="s">Você concluiu o treinamento. Peça agora o seu certificado digital para colocar no perfil e mostrar a clientes e lojas.</p>
-      ${l?`<a class="btn" href="${esc(l)}" target="_blank" rel="noopener" style="text-decoration:none">${ic("award")} Solicitar certificado</a>`:`<p class="tip">Configure o WhatsApp em <b>CONFIG.whatsapp</b> para ativar este botão.</p>`}`);
+      ${l?`<a class="btn" href="${esc(l)}" target="_blank" rel="noopener" style="text-decoration:none">${ic("chat")} Solicitar certificado no WhatsApp</a>`:`<button type="button" class="btn" data-act="closem">${ic("chat")} Solicitar certificado no WhatsApp</button>`}`);
   }
 }
 
