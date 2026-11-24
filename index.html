@@ -916,7 +916,7 @@ function estudoHTML(){
     <div class="sec rgrid" style="margin-top:16px">${rows}</div>
     <section class="sec" aria-labelledby="pdf-title"><div class="sec-h"><h2 id="pdf-title">Seus PDFs</h2><span>${MODULOS.filter((m,i)=>modLiberado(i)).length} de ${MODULOS.length} liberado(s)</span></div>
       <div class="download-intro"><div class="ic">${ic("dl")}</div><div><b>Baixe e imprima para estudar</b><p>Os materiais estão em formato A4 paisagem. Para aproveitar melhor, baixe o PDF e imprima. Os próximos arquivos aparecem aqui conforme você conclui cada módulo.</p></div></div>
-      <div class="download-guide"><b>Downloads liberados</b><p>Leia cada módulo por pelo menos 10 minutos e conclua a leitura. Depois disso, o PDF fica disponível para baixar e imprimir.</p></div>
+      <div class="download-guide"><b>Downloads liberados</b><p>Conclua a leitura de cada módulo para liberar o download e a impressão do PDF correspondente.</p></div>
       ${MODULOS.map((m,i)=>{const lib=modLiberado(i),pdfOk=lib&&(!!done[m.id]||isAdmin()||hasFullUnlockEmail());return `<div class="row ${pdfOk?"":"lk"}" style="margin-top:10px;margin-bottom:0"><div class="num2">${i+1}</div><div class="tx"><b>${esc(m.titulo)}</b><small>${pdfOk?"PDF pronto para baixar e imprimir":lib?"Disponível após 10 minutos de leitura e conclusão":"Conclua o módulo anterior para liberar"}</small></div>${pdfOk?`<a class="pdf-download" href="${esc(m.pdf)}" download>${ic("dl")} Baixar PDF</a>`:`<span class="pill">${ic("lock")}</span>`}</div>`}).join("")}
     </section></div>`;
 }
@@ -1636,12 +1636,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
   renderInstallButton();
 });
 
-window.addEventListener("appinstalled", () => {
-  deferredInstallPrompt = null;
-  toast("MM Academy instalado no seu celular!");
-  const b = $("#installAppBtn");
-  if (b) b.remove();
-});
+
 
 async function triggerAppInstall() {
   if (isStandalone()) {
