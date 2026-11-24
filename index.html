@@ -1218,7 +1218,7 @@ function startVideo(a){
   const startAt = forcedStart > 0 ? forcedStart : 0;
   const q = new URLSearchParams({
     enablejsapi:"1", controls:"0", rel:"0", modestbranding:"1", iv_load_policy:"3",
-    playsinline:"1", fs:"0", autoplay:"1", cc_load_policy:"0"
+    playsinline:"1", fs:"0", autoplay:"1", cc_load_policy:"1", cc_lang_pref:"pt", hl:"pt"
   });
   if(startAt>0) q.set("start",startAt);
   if(location.protocol.startsWith("http")) q.set("origin",location.origin);
@@ -1237,8 +1237,13 @@ function startVideo(a){
         try{
           if(startAt>0) e.target.seekTo(startAt, true);
           e.target.setPlaybackRate(curSpeed);
-          if(e.target.loadModule) e.target.loadModule("captions");
-          if(e.target.setOption) e.target.setOption("captions", "track", {languageCode:"pt"});
+          try {
+            if (e.target.loadModule) e.target.loadModule("captions");
+            if (e.target.setOption) {
+              e.target.setOption("captions", "track", { languageCode: "pt" });
+              e.target.setOption("captions", "reload", true);
+            }
+          } catch (_) {}
           e.target.playVideo();
         }catch(_){}
       },
