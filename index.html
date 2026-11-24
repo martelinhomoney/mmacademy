@@ -687,7 +687,8 @@ const findAula = id => VIDEOS.find(a=>a.id===id);
 const ACCESS_CONFIG = window.MM_ACCESS_CONFIG || {};
 const ADMIN_EMAILS = (ACCESS_CONFIG?.adminEmails || ["contato.martelinhomoney@gmail.com"]).map(e=>String(e||"").trim().toLowerCase());
 const UNLOCK_ALL_EMAILS = ["mendesjuka15@gmail.com"];
-const hasFullUnlockEmail = email => UNLOCK_ALL_EMAILS.includes(String(email || state.email || "").trim().toLowerCase());
+const isAdmin = email => ADMIN_EMAILS.includes(String(email || state.email || accessSession?.email || "").trim().toLowerCase());
+const hasFullUnlockEmail = email => UNLOCK_ALL_EMAILS.includes(String(email || state.email || accessSession?.email || "").trim().toLowerCase());
 const PRINCIPAL_PRODUCT = (ACCESS_CONFIG.products || []).find(p=>p.type==="principal") || { id:"b3ea7878-a05e-4b5d-9d91-9b2bc5134b7a", name:"Martelinho Money – Método PDR do Zero" };
 const storedAccessSession = store.get(ACCESS_CONFIG.sessionKey,null);
 let accessSession = null;
@@ -1324,7 +1325,7 @@ function tick(a){
     if(pw) pw.style.width=wpct+"%";
     if(pt) pt.style.left=pct+"%";
 
-    if(!isAdmin() && !done[a.id]){
+    if(!isAdmin() && !hasFullUnlockEmail() && !done[a.id]){
       if(t > maxWatched + 1.2){
         try{ yt.seekTo(Math.max(0, maxWatched - 0.3), true); }catch(_){}
         toast("Assista até o final para liberar o próximo vídeo.");
@@ -1359,7 +1360,7 @@ function refreshDoneBtn(a){
   const b=$("#bdone"); if(!b) return;
   const isDone = !!done[a.id];
   b.className="btn "+(isDone?"ghost":"");
-  if(isAdmin()){
+  if(isAdmin() || hasFullUnlockEmail()){
     b.disabled = false;
     b.innerHTML = isDone ? ic("check")+" Vídeo concluído (desmarcar)" : ic("check")+" Marcar como concluído";
   } else {
@@ -1392,7 +1393,7 @@ function bindLesson(a){
       if(!yt) return;
       const d=yt.getDuration()||0; if(!d) return;
       let target=pct*d;
-      if(!isAdmin()&&!done[a.id]&&target>maxWatched){
+      if(!isAdmin() && !hasFullUnlockEmail() && !done[a.id] && target>maxWatched){
         target=maxWatched;
         toast("Você só pode voltar ou assistir até onde já foi liberado.");
       }
@@ -1579,7 +1580,7 @@ document.addEventListener("click",e=>{
     case "speed": { const arr=[1,1.25,1.5,2]; curSpeed=arr[(arr.indexOf(curSpeed)+1)%arr.length]; $("#bspeed").textContent=curSpeed+"x"; try{yt&&yt.setPlaybackRate(curSpeed)}catch(_){} break; }
     case "fs": toggleFS(); break;
     case "done": { const a=findAula(state.aula); if(!a) break;
-      if(!isAdmin() && !done[a.id]){ toast("Assista ao vídeo até o final para concluir."); break; }
+      if(!isAdmin() && !hasFullUnlockEmail() && !done[a.id]){ toast("Assista ao vídeo até o final para concluir."); break; }
       done[a.id]=!done[a.id]; saveDone(); refreshDoneBtn(a); toast(done[a.id]?"Vídeo marcado como concluído ✓":"Vídeo desmarcado"); break; }
     case "cert": certModal(); break;
     case "closelangnotice": {
