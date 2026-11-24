@@ -1,14 +1,25 @@
-"icons": [
+{
+  "name": "MM Academy",
+  "short_name": "MM Academy",
+  "description": "Área de Membros Martelinho Money",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07070a",
+  "theme_color": "#07070a",
+  "icons": [
     {
-      "src": "icon-192.png",
+      "src": "img/icon-192.webp",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/webp",
+      "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "img/icon-512.webp",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/webp",
+      "purpose": "any"
     }
   ]
+}
