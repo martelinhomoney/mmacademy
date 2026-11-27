@@ -1,6 +1,13 @@
 /* Configuração central de acesso e ofertas da área de membros. */
 window.MM_ACCESS_CONFIG = Object.freeze({
+  // Mantém a Cakto intacta
   endpoint: "https://script.google.com/macros/s/AKfycbwzEjPBMiaYRzKmzgZCkTEHbj5AbWm5GxuKr0N3NBhPmsZpNLTXSKc29FXam-sPfpDSQA/exec",
+  // Novo endpoint de teste da Wiapy
+  wiapyEndpoint: "https://script.google.com/macros/s/AKfycbxEiLPsP--M1h0w1AkDkBMnTLf6Ux1RDZeIS8DTC4Y6lDKzsULggJ5tzinh1d0jRI9FmQ/exec",
+  endpoints: [
+    "https://script.google.com/macros/s/AKfycbwzEjPBMiaYRzKmzgZCkTEHbj5AbWm5GxuKr0N3NBhPmsZpNLTXSKc29FXam-sPfpDSQA/exec",
+    "https://script.google.com/macros/s/AKfycbxEiLPsP--M1h0w1AkDkBMnTLf6Ux1RDZeIS8DTC4Y6lDKzsULggJ5tzinh1d0jRI9FmQ/exec"
+  ],
   adminEmails: ["contato.martelinhomoney@gmail.com"],
   sessionKey: "accessSession",
   products: [
