@@ -726,11 +726,40 @@ async function consultarAcesso(email){
     const allProducts = ACCESS_CONFIG.products.concat(ACCESS_CONFIG.offers||[]).map(p=>p.id);
     return {autorizado:true, products:allProducts};
   }
-  const url=ACCESS_CONFIG.endpoint+"?email="+encodeURIComponent(email);
-  const response=await fetch(url,{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
-  if(!response.ok) throw new Error("Não foi possível verificar o acesso agora.");
-  const result=await response.json();
-  return {autorizado:result?.autorizado===true,products:Array.isArray(result?.produtos)?result.produtos:[]};
+  const urls = Array.isArray(ACCESS_CONFIG.endpoints) && ACCESS_CONFIG.endpoints.length
+    ? ACCESS_CONFIG.endpoints
+    : [ACCESS_CONFIG.endpoint, ACCESS_CONFIG.wiapyEndpoint].filter(Boolean);
+
+  let algumOk = false;
+  let algumErro = false;
+  const produtosSet = new Set();
+
+  for(const baseUrl of urls){
+    try{
+      const sep = baseUrl.includes("?") ? "&" : "?";
+      const url = baseUrl + sep + "email=" + encodeURIComponent(cleanEmail);
+      const response = await fetch(url,{method:"GET",headers:{Accept:"application/json"},cache:"no-store"});
+      if(!response.ok){ algumErro = true; continue; }
+      const result = await response.json();
+      if(result?.autorizado === true){
+        algumOk = true;
+        if(Array.isArray(result.produtos)){
+          result.produtos.forEach(p => { if(p) produtosSet.add(String(p).trim()); });
+        }
+      }
+    }catch(_){
+      algumErro = true;
+    }
+  }
+
+  if(!algumOk && algumErro){
+    throw new Error("Não foi possível verificar o acesso agora.");
+  }
+
+  return {
+    autorizado: algumOk,
+    products: Array.from(produtosSet)
+  };
 }
 function salvarSessao(email,products){
   accessSession={email,products,timestamp:Date.now()};
